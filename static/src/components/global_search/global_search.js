@@ -155,15 +155,22 @@ export class GlobalSearchSystray extends Component {
 
     /** Perform the debounced RPC search. */
     async _doSearch() {
+        const searchQuery = this.state.query;
         try {
             const results = await this.rpc("/global_search/search", {
-                query: this.state.query,
+                query: searchQuery,
             });
-            this.state.results = results;
+            // Only apply results if the query hasn't changed while we waited
+            if (this.state.query === searchQuery) {
+                this.state.results = results;
+                this.state.isLoading = false;
+            }
         } catch (err) {
-            this.state.results = [];
+            if (this.state.query === searchQuery) {
+                this.state.results = [];
+                this.state.isLoading = false;
+            }
         }
-        this.state.isLoading = false;
     }
 
     // -------------------------------------------------------------------------
@@ -204,7 +211,7 @@ export class GlobalSearchSystray extends Component {
             return;
         }
         this.state.isLoading = true;
-        this._searchTimeout = setTimeout(() => this._doSearch(), 300);
+        this._searchTimeout = setTimeout(() => this._doSearch(), 400);
     }
 
     /** Keyboard navigation inside the search input. */

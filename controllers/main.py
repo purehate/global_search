@@ -55,6 +55,11 @@ class GlobalSearchController(http.Controller):
     ) -> dict | None:
         """Search a single model and return grouped results.
 
+        Splits the query into words and requires ALL words to match
+        across any of the configured fields. For example, "paul sems"
+        becomes: (name ilike paul OR email ilike paul) AND
+                 (name ilike sems OR email ilike sems).
+
         Args:
             config: global.search.config record.
             model_name: Technical model name.
@@ -70,10 +75,19 @@ class GlobalSearchController(http.Controller):
         if not fields_list:
             return None
 
-        # Build OR domain: ['|', '|', (f1, ilike, q), (f2, ilike, q), (f3, ilike, q)]
-        domain = [(f, "ilike", query) for f in fields_list]
-        if len(domain) > 1:
-            domain = ["|"] * (len(domain) - 1) + domain
+        # Split query into words — each word must match at least one field
+        words = query.split()
+        if not words:
+            return None
+
+        domain: list = []
+        for word in words:
+            # OR across all fields for this word
+            word_conditions = [(f, "ilike", word) for f in fields_list]
+            if len(word_conditions) > 1:
+                domain.extend(["|"] * (len(word_conditions) - 1))
+            domain.extend(word_conditions)
+        # Consecutive OR-groups are implicitly ANDed by Odoo's domain parser
 
         limit = config.limit or 5
         records = Model.search(domain, limit=limit)
