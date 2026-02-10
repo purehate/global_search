@@ -39,32 +39,24 @@ class GlobalSearchConfig(models.Model):
         help="Maximum number of results returned per model",
     )
 
-    @api.constrains("model_name")
-    def _check_model_name(self) -> None:
-        """Validate that the configured model exists in the registry."""
-        for record in self:
-            if record.model_name not in self.env:
-                raise ValidationError(
-                    "Model '%s' does not exist." % record.model_name
-                )
-
     @api.constrains("search_fields", "model_name")
     def _check_search_fields(self) -> None:
-        """Validate that the root of each search field exists on the model.
+        """Validate search fields if the model is currently installed.
 
-        For dotted paths like partner_id.name, only the first segment
-        (partner_id) is validated. The ORM handles the rest at search time.
+        Models that aren't installed yet are silently accepted — the
+        controller skips them at search time. This allows pre-configuring
+        search entries for modules that may be installed later.
         """
         for record in self:
             if record.model_name not in self.env:
+                # Model not installed — skip validation, controller
+                # will ignore it at search time
                 continue
             Model = self.env[record.model_name]
             for field_expr in record.search_fields.split(","):
                 field_expr = field_expr.strip()
                 if not field_expr:
                     continue
-                # Only validate the root field — dotted paths are
-                # resolved by the ORM at search time
                 root_field = field_expr.split(".")[0]
                 if root_field not in Model._fields:
                     raise ValidationError(

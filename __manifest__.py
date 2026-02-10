@@ -1,6 +1,6 @@
 {
     "name": "Global Search",
-    "version": "17.0.1.3.0",
+    "version": "17.0.1.4.0",
     "summary": "Spotlight-style search across models (Cmd+K / Ctrl+K)",
     "description": (
         "Adds a Spotlight-style global search to Odoo. "
