@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+    <t t-name="global_search.GlobalSearchSystray">
+        <!-- Systray trigger icon -->
+        <div class="o_global_search_systray" t-on-click="onIconClick" title="Global Search (Ctrl+K)">
+            <i class="fa fa-search" />
+            <span class="o_gs_shortcut d-none d-md-inline">Ctrl+K</span>
+        </div>
+
+        <!-- Full-screen overlay -->
+        <div t-if="state.isOpen" class="o_global_search_overlay" t-on-click="onBackdropClick">
+            <div class="o_global_search_dialog">
+                <!-- Search input -->
+                <div class="o_gs_input_wrapper">
+                    <i class="fa fa-search o_gs_input_icon" />
+                    <input
+                        t-ref="searchInput"
+                        type="text"
+                        class="o_gs_input"
+                        t-att-value="state.query"
+                        t-on-input="onInput"
+                        t-on-keydown="onKeydown"
+                        placeholder="Search contacts, orders, projects, tasks..."
+                    />
+                    <i t-if="state.isLoading" class="fa fa-spinner fa-spin o_gs_spinner" />
+                    <span class="o_gs_esc_hint">ESC</span>
+                </div>
+
+                <!-- Results -->
+                <div t-if="state.results.length" class="o_gs_results">
+                    <t t-foreach="flatResults" t-as="group" t-key="group.model">
+                        <div class="o_gs_group_header">
+                            <i t-attf-class="fa {{group.icon}} me-2" />
+                            <span t-esc="group.model_name" />
+                        </div>
+                        <t t-foreach="group.records" t-as="record" t-key="record.id">
+                            <div
+                                t-att-class="'o_gs_result' + (state.selectedIndex === record.flatIndex ? ' selected' : '')"
+                                t-att-data-res-model="group.model"
+                                t-att-data-res-id="record.id"
+                                t-on-click="onResultClick"
+                            >
+                                <span class="o_gs_result_name" t-esc="record.name" />
+                                <span class="o_gs_result_model" t-esc="group.model_name" />
+                            </div>
+                        </t>
+                    </t>
+                </div>
+
+                <!-- No results -->
+                <div t-if="showNoResults" class="o_gs_empty">
+                    No results found for "<t t-esc="state.query" />"
+                </div>
+
+                <!-- Hint -->
+                <div t-if="showHint" class="o_gs_hint">
+                    <div class="o_gs_hint_text">Type at least 2 characters to search</div>
+                    <div class="o_gs_hint_keys">
+                        <span class="o_gs_key">&#8593;&#8595;</span> navigate
+                        <span class="o_gs_key ms-3">&#9166;</span> open
+                        <span class="o_gs_key ms-3">esc</span> close
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>
