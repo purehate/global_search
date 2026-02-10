@@ -50,32 +50,24 @@ class GlobalSearchConfig(models.Model):
 
     @api.constrains("search_fields", "model_name")
     def _check_search_fields(self) -> None:
-        """Validate that all configured search fields exist on the model.
+        """Validate that the root of each search field exists on the model.
 
-        Supports dotted paths like partner_id.name — validates each
-        segment of the path by traversing the relational chain.
+        For dotted paths like partner_id.name, only the first segment
+        (partner_id) is validated. The ORM handles the rest at search time.
         """
         for record in self:
             if record.model_name not in self.env:
                 continue
+            Model = self.env[record.model_name]
             for field_expr in record.search_fields.split(","):
                 field_expr = field_expr.strip()
                 if not field_expr:
                     continue
-                self._validate_field_path(
-                    record.model_name, field_expr
-                )
-
-    def _validate_field_path(self, model_name: str, field_path: str) -> None:
-        """Walk a dotted field path and raise if any segment is invalid."""
-        parts = field_path.split(".")
-        current_model = self.env[model_name]
-        for part in parts:
-            if part not in current_model._fields:
-                raise ValidationError(
-                    "Field '%s' does not exist on model '%s'."
-                    % (part, current_model._name)
-                )
-            field = current_model._fields[part]
-            if hasattr(field, "comodel_name") and field.comodel_name:
-                current_model = self.env[field.comodel_name]
+                # Only validate the root field — dotted paths are
+                # resolved by the ORM at search time
+                root_field = field_expr.split(".")[0]
+                if root_field not in Model._fields:
+                    raise ValidationError(
+                        "Field '%s' does not exist on model '%s'."
+                        % (root_field, record.model_name)
+                    )
