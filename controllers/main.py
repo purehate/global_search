@@ -31,20 +31,36 @@ class GlobalSearchController(http.Controller):
         )
         results: list[dict] = []
 
+        _logger.info(
+            "Global search: query='%s', configs=%d", query, len(configs)
+        )
+
         for config in configs:
             model_name = config.model_name
             if model_name not in request.env:
+                _logger.warning(
+                    "Global search: model '%s' not in registry, skipping",
+                    model_name,
+                )
                 continue
 
             try:
                 group = self._search_model(config, model_name, query)
                 if group:
                     results.append(group)
+                    _logger.info(
+                        "Global search: %s returned %d results",
+                        model_name,
+                        len(group["records"]),
+                    )
             except AccessError:
+                _logger.info(
+                    "Global search: access denied on %s", model_name
+                )
                 continue
-            except ValueError as exc:
-                _logger.warning(
-                    "Global search config error on %s: %s", model_name, exc
+            except Exception as exc:
+                _logger.exception(
+                    "Global search: error searching %s: %s", model_name, exc
                 )
                 continue
 

@@ -2,11 +2,11 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-# Default search configurations created on install.
+# Default search configurations created on install/upgrade.
 # Only models that are actually installed will be configured.
 _DEFAULT_CONFIGS = [
     ("Contacts", "res.partner", "name,email,phone", "fa-address-book", 10),
-    ("Sales Orders", "sale.order", "name,client_order_ref", "fa-shopping-cart", 20),
+    ("Sales / Quotations", "sale.order", "name,client_order_ref", "fa-shopping-cart", 20),
     ("Projects", "project.project", "name", "fa-folder", 30),
     ("Tasks", "project.task", "name", "fa-tasks", 40),
     ("Invoices", "account.move", "name,ref", "fa-file-text", 50),
@@ -16,11 +16,26 @@ _DEFAULT_CONFIGS = [
 
 def _post_init_hook(env) -> None:
     """Create default global search configs for installed models."""
+    _ensure_default_configs(env)
+
+
+def _ensure_default_configs(env) -> None:
+    """Create missing default configs. Safe to call multiple times."""
     Config = env["global.search.config"]
+    existing = Config.search([]).mapped("model_name")
+
     for name, model_name, search_fields, icon, sequence in _DEFAULT_CONFIGS:
         if model_name not in env:
             continue
-        # Only keep fields that actually exist on the model
+        # Skip duplicate model entries (e.g. sale.order for both Orders and Quotations)
+        # but allow if the label is different
+        existing_for_name = Config.search([
+            ("model_name", "=", model_name),
+            ("name", "=", name),
+        ])
+        if existing_for_name:
+            continue
+
         Model = env[model_name]
         valid_fields = [
             f.strip()
