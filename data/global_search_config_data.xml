@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+
+    <record id="config_contacts" model="global.search.config">
+        <field name="name">Contacts</field>
+        <field name="model_name">res.partner</field>
+        <field name="search_fields">name,email,phone</field>
+        <field name="icon">fa-address-book</field>
+        <field name="sequence">10</field>
+        <field name="limit">5</field>
+    </record>
+
+    <record id="config_sales" model="global.search.config">
+        <field name="name">Sales / Quotations</field>
+        <field name="model_name">sale.order</field>
+        <field name="search_fields">name,client_order_ref,partner_id.name</field>
+        <field name="icon">fa-shopping-cart</field>
+        <field name="sequence">20</field>
+        <field name="limit">5</field>
+    </record>
+
+    <record id="config_projects" model="global.search.config">
+        <field name="name">Projects</field>
+        <field name="model_name">project.project</field>
+        <field name="search_fields">name,partner_id.name</field>
+        <field name="icon">fa-folder</field>
+        <field name="sequence">30</field>
+        <field name="limit">5</field>
+    </record>
+
+    <record id="config_tasks" model="global.search.config">
+        <field name="name">Tasks</field>
+        <field name="model_name">project.task</field>
+        <field name="search_fields">name</field>
+        <field name="icon">fa-tasks</field>
+        <field name="sequence">40</field>
+        <field name="limit">5</field>
+    </record>
+
+    <record id="config_invoices" model="global.search.config">
+        <field name="name">Invoices</field>
+        <field name="model_name">account.move</field>
+        <field name="search_fields">name,ref,partner_id.name</field>
+        <field name="icon">fa-file-text</field>
+        <field name="sequence">50</field>
+        <field name="limit">5</field>
+    </record>
+
+    <record id="config_crm" model="global.search.config">
+        <field name="name">CRM Leads</field>
+        <field name="model_name">crm.lead</field>
+        <field name="search_fields">name,contact_name,email_from,partner_name</field>
+        <field name="icon">fa-filter</field>
+        <field name="sequence">60</field>
+        <field name="limit">5</field>
+    </record>
+
+</odoo>
